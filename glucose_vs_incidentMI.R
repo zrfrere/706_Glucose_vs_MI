@@ -1,6 +1,6 @@
 library(tidyverse)
 
-location_of_csv = ""
+location_of_csv = paste0(getwd(), "/Desktop/BIOS706/midterm/frmgham2.csv")
 dat <- read.csv(location_of_csv)
 
 #exclude period 3 data
@@ -48,5 +48,10 @@ shapiro.test((dat_filter_p2_nodevMI$GLUCOSE))
 wilcox.test((dat_filter_p2_devMI$GLUCOSE), (dat_filter_p2_nodevMI$GLUCOSE))
 
 #Here we can try logistic regression
-model <- glm(PREVMI~GLUCOSE+AGE+PREVHYP, data = dat_filter_p2, family = "binomial")
+
+data_p1 = data_aim3 %>% filter(PERIOD ==1) %>% select(-c(PREVMI))
+data_p2 = data_aim3 %>% filter(PERIOD == 2) %>% select(RANDID, PREVMI)
+data_p1_leftj_p2 = left_join(data_p1, data_p2, by='RANDID')
+
+model <- glm(PREVMI~GLUCOSE+AGE+PREVHYP, data = data_p1_leftj_p2, family = "binomial")
 summary(model)
