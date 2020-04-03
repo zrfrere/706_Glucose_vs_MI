@@ -1,39 +1,35 @@
 library(tidyverse)
 
-location_of_csv = paste0("/Users/zacharyfrere", "/desktop", "/BIOS706", "/midterm", "/frmgham2.csv")
+location_of_csv = ""
 dat <- read.csv(location_of_csv)
 
-#Subset Data so that we only have records that are either in Record 1 or 2
-dat_subset <- dat %>% filter(dat$PERIOD <= 2 )
+#exclude period 3 data
+#exclude those who had PREVMI at period 1
+data_aim3 = dat %>% filter(PERIOD != 3) %>% filter(!(PERIOD == 1 & PREVMI == 1))
+data_aim3
+#create dataset for Period 1 and Glucose
+data_aim31 = data_aim3 %>% filter(PERIOD ==1) %>% select(RANDID, GLUCOSE)
+data_aim31
 
-#We want to study the effect of glucose on the incident of MI
+#create dataset for Period 2 and MI
+data_aim32 = data_aim3 %>% filter(PERIOD == 2) %>% select(RANDID, PREVMI)
+data_aim32
 
-#First, we will try to find two groups those who develop and those who do not develop MI
-# need to remove those with MI in Period 1 from our dataset
+#merge datasets to include one dataset with glucose(Period 1) and MI(Period 2)
+data_aim33 = left_join(data_aim31, data_aim32, by='RANDID')
+data_aim33
 
-dat_noMI_p1 <- dat_subset %>% group_by(RANDID) %>% filter( PERIOD == 1 && PREVMI == 0  )
+#exclude Na's
+data_aim34 = na.omit(data_aim33)
+data_aim34
 
-#Check the filter above
-dat_MI_p1 <- dat_subset %>% group_by(RANDID) %>% filter(PERIOD == 1 && PREVMI == 1)
+data_aim34 %>% group_by(PREVMI) %>% summarize(n=n())
 
-id_mi_p1 <- unique(dat_MI_p1$RANDID)
-id_nomi_p1 <- unique(dat_noMI_p1$RANDID)
-intersect(id_mi_p1, id_nomi_p1)
-# Since there are no common terms between the two vectors this indicates we have removed all
-# observation with RANDIDs who already have MI in Period 1
-
-dat_filter_p2 <- dat_noMI_p1 %>% filter(PERIOD == 2 )
-#Remove NA
-dat_filter_p2 <- dat_filter_p2 %>% filter(!is.na(GLUCOSE))
-#Now, let's test for normality of our variable of interest, Glucose
-qqnorm(dat_filter_p2$GLUCOSE)
-qqline(dat_filter_p2$GLUCOSE)
-hist(dat_filter_p2$GLUCOSE)
 
 
 #Now, look at normality of the individual groups, those who develop MI and those who do not
-dat_filter_p2_devMI <- dat_filter_p2 %>% filter(PREVMI == 1)
-dat_filter_p2_nodevMI <- dat_filter_p2 %>% filter(PREVMI == 0)
+dat_filter_p2_devMI <- data_aim34 %>% filter(PREVMI == 1)
+dat_filter_p2_nodevMI <- data_aim34 %>% filter(PREVMI == 0)
 
 #Look at distribution for dev MI, Glucose level
 qqnorm((dat_filter_p2_devMI$GLUCOSE))
@@ -54,4 +50,3 @@ wilcox.test((dat_filter_p2_devMI$GLUCOSE), (dat_filter_p2_nodevMI$GLUCOSE))
 #Here we can try logistic regression
 model <- glm(PREVMI~GLUCOSE+AGE+PREVHYP, data = dat_filter_p2, family = "binomial")
 summary(model)
-
