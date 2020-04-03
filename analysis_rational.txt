@@ -1,0 +1,10 @@
+Analysis Rational:
+
+1.  My original plan was to perform a t-test if applicable
+2.  Perform Mann-Whitney test if data is non-normal
+3.  Perform logistic regression as back-up analysis
+	I chose Age and Previous Hypertension as
+	risk factors that I could control for 
+	in my logistic regression model
+
+
